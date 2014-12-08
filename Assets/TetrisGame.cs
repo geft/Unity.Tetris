@@ -1,9 +1,11 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 
 public class TetrisGame : MonoBehaviour {
 
+	public int Score { get; set; }
 	public int FallSpeed { get; set; } // max is 30
 
 	private int _cellGridRow;
@@ -13,7 +15,7 @@ public class TetrisGame : MonoBehaviour {
 	private bool _dropped;
 	private bool _paused;
 	
-	private int[][] _currBlock;
+	private int[][] _currBlock, _bufferBlock;
 	
 	GameObject[,] cellGrid;
 
@@ -28,7 +30,12 @@ public class TetrisGame : MonoBehaviour {
 		_paused = false;
 	
 		GenerateCellGrid();
+		
+		UpdateBlockPreview();
 		GenerateBlock();
+		UpdateBlockPreview();
+		
+		Score = 0;
 	}
 
 	void Update () 
@@ -38,8 +45,10 @@ public class TetrisGame : MonoBehaviour {
 	
 		if (_dropped)
 		{
+			Score += 5;
 			RowClear();
 			GenerateBlock();
+			UpdateBlockPreview();
 			_dropped = false;
 		}
 			
@@ -51,6 +60,8 @@ public class TetrisGame : MonoBehaviour {
 		
 		CheckBottomCollision(_currBlock);
 		CheckTopCollision(_currBlock);
+		
+		UpdateScore();
 	}
 	
 	private void GenerateCellGrid ()
@@ -83,20 +94,12 @@ public class TetrisGame : MonoBehaviour {
 	
 	private void GenerateBlock ()
 	{
-		Tetronimo block = new Tetronimo();
-	
-		int[][] pos = block.Generate(Random.Range(0, 6));
-		_currBlock = new int[4][];
+		_currBlock = _bufferBlock;
 		
-		int count = 0;
-		
-		foreach (int[] c in pos)
+		foreach (int[] c in _currBlock)
 		{
-			int row = 18 + c[0];
-			int col = 3 + c[1];
-			
-			_currBlock[count] = new int[]{row, col};
-			count++;
+			c[0] += 18;
+			c[1] += 3;
 		}
 		
 		RenderBlock(true, _currBlock);
@@ -179,30 +182,87 @@ public class TetrisGame : MonoBehaviour {
 	
 	private void RowClear ()
 	{
-		int count = 0;
+		int clearCount = 0;
+		int colCount = 0;
 
+		// loop until all rows are cleared
 		for (int i = 0; i < _cellGridRow - 2; i++)
 		{
+			// check for cell in every column in a row
 			for (int j = 0; j < _cellGridCol; j++)
 			{
 				if (!cellGrid[i, j].GetComponent<MeshRenderer>().enabled)
 					break;
 					
-				count++;
+				colCount++;
 			}
 			
-			if (count == 10)
+			// row contains full cells
+			if (colCount == 10)
 			{	
 				for (int row = i; row < _cellGridRow - 2; row++)
 				{
+					// shift row downwards
 					for (int col = 0; col < _cellGridCol; col++)
 						cellGrid[row, col].GetComponent<MeshRenderer>().enabled = cellGrid[row+1, col].GetComponent<MeshRenderer>().enabled;
 				}
 				
 				i--;
+				clearCount++;
 			}
 
-			count = 0;
+			colCount = 0;
 		}
+		
+		if (clearCount == 1)
+			Score += 40;
+		else if (clearCount == 2)
+			Score += 100;
+		else if (clearCount == 3)
+			Score += 300;
+		else if (clearCount > 3)
+			Score += 1200;
+	}
+	
+	private void UpdateBlockPreview ()
+	{
+		// instantiate new block in buffer
+		Tetronimo block = new Tetronimo();
+		_bufferBlock = block.Generate(Random.Range(0, 6));
+	
+		GameObject[] itemsToDestroy = GameObject.FindGameObjectsWithTag("preview");
+		
+		// clear displayed buffer
+		if (itemsToDestroy != null)
+		{
+			foreach (GameObject o in itemsToDestroy)
+			{
+				GameObject.Destroy(o);
+			}
+		}
+		
+		// display buffered block
+		foreach (int[] c in _bufferBlock)
+		{
+			GameObject cell = GameObject.CreatePrimitive(PrimitiveType.Plane);
+			cell.tag = "preview";
+			cell.transform.parent = GameObject.Find("PreviewField").transform;
+
+			cell.transform.localPosition = new Vector3(	c[1]*50, c[0]*50, -1f);
+			cell.transform.rotation = Quaternion.Euler(270, 0, 0);
+			cell.transform.localScale = new Vector3(5, 5, 5);
+			
+			cell.renderer.material.color = Color.white;
+									
+			MeshRenderer mr = cell.GetComponent<MeshRenderer>();
+			mr.castShadows = false;
+			mr.receiveShadows = false;
+		}
+	}
+	
+	private void UpdateScore ()
+	{
+		Text score = GameObject.Find("Score").GetComponent<Text>();
+		score.text = Score.ToString();
 	}
 }
