@@ -1,0 +1,15 @@
+﻿<Properties>
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Tetronimo.cs">
+    <Files>
+      <File FileName="Assets\Tetronimo.cs" Line="213" Column="13" />
+      <File FileName="Assets\TetrisGame.cs" Line="3" Column="34" />
+      <File FileName="Assets\InputHelper.cs" Line="7" Column="29" />
+      <File FileName="Assets\TetronimoBlocks.cs" Line="19" Column="22" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
